@@ -5,12 +5,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+
+import me.whiteship.commons.ErrorResponse;
 
 /**
  * @author LeeSooHoon
@@ -32,11 +35,29 @@ public class AccountController {
     @RequestMapping(value = "/accounts", method = RequestMethod.POST)
     public ResponseEntity<Object> createAccount(@RequestBody @Valid AccountDto.Create create, BindingResult result) {
         if (result.hasErrors()) {
-            // TODO 에러 응답 본문 처리하기
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            ErrorResponse errorResponse = new ErrorResponse();
+            errorResponse.setMessage("잘못된 요청입니다.");
+            errorResponse.setCode("bad.request");
+            // TODO BindingResult 안에 들어있는 에러 정보 사용하기.
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
         }
 
         Account newAccount = service.createAccount(create);
+        // 서비스의 처리여부
+        // 1. 리턴 타입으로 판단.
+        // 2. 파라미터 이용.
+        // 3. 서비스에서 예외를 던짐(굿)
         return new ResponseEntity<>(modelMapper.map(newAccount, AccountDto.Response.class), HttpStatus.CREATED);
     }
+
+    @ExceptionHandler(value = UserDuplicatedException.class)
+    public ResponseEntity handleUserDuplicatedException(UserDuplicatedException e) {
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setMessage("[" + e.getUserName() + "] 중복된 userName 입니다.");
+        errorResponse.setCode("duplicated.userName.exception");
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    // TODO 예외 처리 네번재 방법 (콜백 비스무리한거...)
+
 }
