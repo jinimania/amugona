@@ -19,6 +19,7 @@ import org.springframework.web.context.WebApplicationContext;
 import me.whiteship.Application;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -32,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 //@ContextConfiguration(loader = SpringApplicationContextLoader.class, classes = Application.class)
 @WebAppConfiguration
 @Transactional
+//@TransactionConfiguration(defaultRollback = true)
 public class AccountControllerTest {
 
     @Autowired
@@ -39,6 +41,9 @@ public class AccountControllerTest {
 
     @Autowired
     ObjectMapper objectMapper;
+
+    @Autowired
+    AccountService service;
 
     MockMvc mockMvc;
 
@@ -85,6 +90,31 @@ public class AccountControllerTest {
         result.andDo(print());
         result.andExpect(status().isBadRequest());
         result.andExpect(jsonPath("$.code", is("bad.request")));
+    }
+
+    // TODO getAccounts()
+
+    @Test
+    public void getAccounts() throws Exception {
+        AccountDto.Create createDto = new AccountDto.Create();
+        createDto.setUserName("whiteship");
+        createDto.setPassword("password");
+        service.createAccount(createDto);
+
+        ResultActions result = mockMvc.perform(get("/accounts"));
+
+        // {"content":
+        // [{"id":1,"userName":"whiteship","fullName":null,"joined":1441773700552,"updated":1441773700552}],
+        // "totalElements":1,
+        // "totalPages":1,
+        // "last":true,
+        // "size":20,
+        // "number":0,
+        // "sort":null,
+        // "first":true,
+        // "numberOfElements":1}
+        result.andDo(print());
+        result.andExpect(status().isOk());
     }
 
 }
