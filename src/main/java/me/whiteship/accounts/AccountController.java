@@ -69,7 +69,6 @@ public class AccountController {
     }
 
     // TODO stream() vs parallelStream()
-    // TODO 로깅
     // TODO HATEOAS
     // TODO 뷰
     // NSPA 1. Thymeleaf
