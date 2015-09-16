@@ -21,6 +21,7 @@ import me.whiteship.Application;
 import static org.hamcrest.CoreMatchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -55,9 +56,7 @@ public class AccountControllerTest {
     // TODO 서비스 호출에서 예외 상황을 비동기 콜백으로 처리하는 것도 해주세요. 예외 던지지 말고
     @Test
     public void createAccount() throws Exception {
-        AccountDto.Create createDto = new AccountDto.Create();
-        createDto.setUserName("whiteship");
-        createDto.setPassword("password");
+        AccountDto.Create createDto = accountCreateDto();
 
         ResultActions result = mockMvc.perform(post("/accounts")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -96,9 +95,7 @@ public class AccountControllerTest {
 
     @Test
     public void getAccounts() throws Exception {
-        AccountDto.Create createDto = new AccountDto.Create();
-        createDto.setUserName("whiteship");
-        createDto.setPassword("password");
+        AccountDto.Create createDto = accountCreateDto();
         service.createAccount(createDto);
 
         ResultActions result = mockMvc.perform(get("/accounts"));
@@ -115,6 +112,41 @@ public class AccountControllerTest {
         // "numberOfElements":1}
         result.andDo(print());
         result.andExpect(status().isOk());
+    }
+
+    private AccountDto.Create accountCreateDto() {
+        AccountDto.Create createDto = new AccountDto.Create();
+        createDto.setUserName("whiteship");
+        createDto.setPassword("password");
+        return createDto;
+    }
+
+    @Test
+    public void getAccount() throws Exception {
+        final AccountDto.Create createDto = accountCreateDto();
+        final Account account = service.createAccount(createDto);
+        final ResultActions result = mockMvc.perform(get("/accounts/" + account.getId()));
+
+        result.andDo(print());
+        result.andExpect(status().isOk());
+    }
+
+    @Test
+    public void updateAccount() throws Exception {
+        final AccountDto.Create createDto = accountCreateDto();
+        final Account account = service.createAccount(createDto);
+
+        final AccountDto.Update updateDto = new AccountDto.Update();
+        updateDto.setFullName("keesun baik");
+        updateDto.setPassword("pass");
+
+        final ResultActions result = mockMvc.perform(put("/accounts/" + account.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateDto)));
+
+        result.andDo(print());
+        result.andExpect(status().isOk());
+        result.andExpect(jsonPath("$.fullName", is("keesun baik")));
     }
 
 }
