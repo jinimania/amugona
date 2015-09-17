@@ -22,9 +22,7 @@ import javax.validation.Valid;
 
 import me.whiteship.commons.ErrorResponse;
 
-import static org.springframework.web.bind.annotation.RequestMethod.GET;
-import static org.springframework.web.bind.annotation.RequestMethod.POST;
-import static org.springframework.web.bind.annotation.RequestMethod.PUT;
+import static org.springframework.web.bind.annotation.RequestMethod.*;
 
 /**
  * @author LeeSooHoon
@@ -101,6 +99,12 @@ public class AccountController {
         }
         final Account updatedAccount = service.updateAccount(id, updateDto);
         return new ResponseEntity<>(modelMapper.map(updatedAccount, AccountDto.Response.class), HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/accounts/{id}", method = DELETE)
+    public ResponseEntity deleteAccount(@PathVariable Long id) {
+        service.deleteAccount(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     // TODO 예외 처리 네번재 방법 (콜백 비스무리한거...)
