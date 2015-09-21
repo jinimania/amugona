@@ -2,6 +2,7 @@ package me.whiteship.accounts;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,11 +24,14 @@ public class AccountService {
     private AccountRepository repository;
 
     @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
     private ModelMapper modelMapper;
 
     public Account createAccount(AccountDto.Create dto) {
         Account account = modelMapper.map(dto, Account.class);
-        // TODO 유효한 userName인지 판단
+
         String userName = dto.getUserName();
         if (repository.findByUserName(userName) != null) {
 //            logger.error("user duplicated exception, {}", userName);
@@ -35,8 +39,8 @@ public class AccountService {
             throw new UserDuplicatedException(userName);
         }
 
+        account.setPassword(passwordEncoder.encode(account.getPassword()));
 
-        // TODO password 해싱
         Date now = new Date();
         account.setJoined(now);
         account.setUpdated(now);
@@ -45,7 +49,7 @@ public class AccountService {
 
     public Account updateAccount(Long id, AccountDto.Update updateDto) {
         final Account account = getAccount(id);
-        account.setPassword(updateDto.getPassword());
+        account.setPassword(passwordEncoder.encode(account.getPassword()));
         account.setFullName(updateDto.getFullName());
         return repository.save(account);
     }
